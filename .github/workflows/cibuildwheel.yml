@@ -94,7 +94,7 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: manylinux1
           # CIBW_BEFORE_BUILD: pip install certifi numpy==1.16
           CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: pytest -v --durations=50 -m "not gpu" {package}
+          CIBW_TEST_COMMAND: pytest -v --durations=50 -m "not gpu" stardist
 
 
 
