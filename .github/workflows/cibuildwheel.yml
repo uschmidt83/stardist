@@ -69,10 +69,10 @@ jobs:
           python -m cibuildwheel --output-dir dist
         env:
           # onyl build for platforms where tensorflow is available
-          CIBW_BUILD: "cp36-*"
+          CIBW_BUILD: "cp37-*"
           # CIBW_BUILD: "cp3?-*"
           # CIBW_SKIP: "cp35-* cp39-*"
-          CIBW_BEFORE_BUILD: python -m pip install --upgrade pip wheel setuptools
+          # CIBW_BEFORE_BUILD: python -m pip install --upgrade pip wheel setuptools
           # CIBW_TEST_REQUIRES: pytest tensorflow
           # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
           #
