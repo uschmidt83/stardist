@@ -32,7 +32,7 @@ jobs:
           python-version: '3.7'
 
       - run: conda init bash
-      - run: source .bash_profile
+      - run: source ~/.bash_profile
       # - run: bash
       - run: conda activate test
       - run: python -VV
