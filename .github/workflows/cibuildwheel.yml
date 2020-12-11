@@ -33,12 +33,12 @@ jobs:
 
 
       - name: Install cibuildwheel
-        - shell: bash -l {0}
+        shell: bash -l {0}
           run: python -m pip install cibuildwheel
 
       - name: Build wheels for CPython (macOS)
         if: matrix.os == 'macos-latest'
-        - shell: bash -l {0}
+        shell: bash -l {0}
           run: |
             brew install gcc@10
             python -m cibuildwheel --output-dir dist
