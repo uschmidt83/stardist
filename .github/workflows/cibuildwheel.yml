@@ -35,7 +35,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           brew config
-          brew install gcc@10
+          brew install gcc@4
           python -m cibuildwheel --output-dir dist
         env:
           # CIBW_BUILD: "cp3?-*"
@@ -45,7 +45,7 @@ jobs:
           #
           CIBW_BUILD: "cp37-*"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_REPAIR_WHEEL_COMMAND: ""
+          # CIBW_REPAIR_WHEEL_COMMAND: ""
           # CPPFLAGS: "-mmacosx-version-min=10.9"
           # CXXFLAGS: "-mmacosx-version-min=10.9"
           # CFLAGS: "-mmacosx-version-min=10.9"
@@ -53,14 +53,14 @@ jobs:
           # CIBW_TEST_REQUIRES: pytest tensorflow
           # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
           #
-          CC: /usr/local/bin/gcc-10
-          CXX: /usr/local/bin/g++-10
+          CC: /usr/local/bin/gcc-4
+          CXX: /usr/local/bin/g++-4
 
 
       - run: |
-          mdfind -name libgcc_s
-          mdfind -name libgomp
-          mdfind -name libstdc++
+          mdfind -name libgcc_s.1.dylib
+          mdfind -name libgomp.1.dylib
+          mdfind -name libstdc++.6.dylib
 
 
       - name: Build wheels for CPython (Linux and Windows)
