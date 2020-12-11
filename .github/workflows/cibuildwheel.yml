@@ -71,15 +71,11 @@ jobs:
           CIBW_BUILD: "cp3?-*"
           CIBW_SKIP: "cp35-* cp39-*"
           CIBW_BEFORE_BUILD: python -m pip install git+https://github.com/uschmidt83/delocate.git@patch-1
-          # CIBW_TEST_REQUIRES: pytest tensorflow
-          # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
+          CIBW_TEST_REQUIRES: pytest tensorflow
+          CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
           #
           CC: /usr/local/bin/gcc-10
           CXX: /usr/local/bin/g++-10
-          # CPPFLAGS: "-Xpreprocessor -fopenmp"
-          # CFLAGS: "-Wno-implicit-function-declaration -I/usr/local/opt/libomp/include"
-          # CXXFLAGS: "-I/usr/local/opt/libomp/include"
-          # LDFLAGS: "-Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
 
 
       - name: Build wheels for CPython (Linux and Windows)
@@ -94,6 +90,7 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_TEST_REQUIRES: pytest tensorflow
           CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
+
 
       - uses: actions/upload-artifact@v2
         with:
