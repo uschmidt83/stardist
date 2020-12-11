@@ -37,7 +37,7 @@ jobs:
       - name: Build wheels for CPython (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          brew install gcc@8
+          brew install gcc@7
           python -m cibuildwheel --output-dir dist
         env:
           # CIBW_BUILD: "cp3?-*"
