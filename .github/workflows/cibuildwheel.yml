@@ -35,7 +35,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           brew config
-          brew install gcc@4
+          brew install gcc@5
           python -m cibuildwheel --output-dir dist
         env:
           # CIBW_BUILD: "cp3?-*"
@@ -53,8 +53,8 @@ jobs:
           # CIBW_TEST_REQUIRES: pytest tensorflow
           # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
           #
-          CC: /usr/local/bin/gcc-4
-          CXX: /usr/local/bin/g++-4
+          CC: /usr/local/bin/gcc-5
+          CXX: /usr/local/bin/g++-5
 
 
       - run: |
