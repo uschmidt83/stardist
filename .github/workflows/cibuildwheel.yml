@@ -57,6 +57,12 @@ jobs:
           CXX: /usr/local/bin/g++-10
 
 
+      - run: |
+          mdfind -name libgcc_s
+          mdfind -name libgomp
+          mdfind -name libstdc++
+
+
       - name: Build wheels for CPython (Linux and Windows)
         if: matrix.os != 'macos-latest'
         run: |
