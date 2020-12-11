@@ -68,11 +68,11 @@ jobs:
           brew install gcc@10
           python -m cibuildwheel --output-dir dist
         env:
-          # onyl build for platforms where tensorflow is available
+          # only build for platforms where tensorflow is available
           CIBW_BUILD: "cp37-*"
           # CIBW_BUILD: "cp3?-*"
           # CIBW_SKIP: "cp35-* cp39-*"
-          # CIBW_BEFORE_BUILD: python -m pip install --upgrade pip wheel setuptools
+          CIBW_BEFORE_BUILD: python -m pip install git+https://github.com/uschmidt83/delocate.git@patch-1
           # CIBW_TEST_REQUIRES: pytest tensorflow
           # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
           #
@@ -89,7 +89,7 @@ jobs:
         run: |
           python -m cibuildwheel --output-dir dist
         env:
-          # onyl build for platforms where tensorflow is available
+          # only build for platforms where tensorflow is available
           CIBW_BUILD: "cp3?-*x86_64 cp3?-*win_amd64"
           CIBW_SKIP: "cp35-* cp39-*"
           # numba is a requirement and only has wheels for manylinux2014
