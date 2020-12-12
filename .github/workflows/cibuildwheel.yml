@@ -16,9 +16,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        # os: [ubuntu-latest, windows-latest]
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
         # os: [macos-latest]
+        include:
+          - os: macos-10.13
+            MACOSX_DEPLOYMENT_TARGET: 10.13
+          - os: macos-10.14
+            MACOSX_DEPLOYMENT_TARGET: 10.14
+          - os: macos-10.15
+            MACOSX_DEPLOYMENT_TARGET: 10.15
+
 
     steps:
       - uses: actions/setup-python@v2
@@ -33,7 +41,7 @@ jobs:
         name: Checkout repository
 
       - name: Build wheels for CPython (macOS)
-        if: matrix.os == 'macos-latest'
+        if: startsWith(matrix.os, 'macos')
         run: |
           brew config
           brew install gcc@9
@@ -44,16 +52,16 @@ jobs:
           # install fork of 'delocate' to work around bug
           CIBW_BEFORE_BUILD: python -m pip install git+https://github.com/uschmidt83/delocate.git@patch-1
            # TODO: make it work for 10.9 (required libstdc++.dylib and libgomp.dylib from gcc compiled for 10.15)
-          MACOSX_DEPLOYMENT_TARGET: 10.15
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.MACOSX_DEPLOYMENT_TARGET }}
           # CIBW_BUILD_VERBOSITY: 1
-          CIBW_TEST_REQUIRES: pytest tensorflow
-          CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
+          # CIBW_TEST_REQUIRES: pytest tensorflow
+          # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
           # use gcc instead of clang
           CC: /usr/local/bin/gcc-9
           CXX: /usr/local/bin/g++-9
 
       - name: Build wheels for CPython (Linux and Windows)
-        if: matrix.os != 'macos-latest'
+        if: startsWith(matrix.os, 'macos') == false
         run: |
           python -m cibuildwheel --output-dir dist
         env:
@@ -62,8 +70,8 @@ jobs:
           CIBW_SKIP: "cp35-* cp39-*"
           # numba is a requirement and only has wheels for manylinux2014
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_TEST_REQUIRES: pytest tensorflow
-          CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
+          # CIBW_TEST_REQUIRES: pytest tensorflow
+          # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
 
       - uses: actions/upload-artifact@v2
         name: Upload wheels
