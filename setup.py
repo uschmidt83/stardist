@@ -79,6 +79,12 @@ setup(
             extra_compile_args = ['-std=c++11'],
             include_dirs=get_numpy_include_dirs() + [qhull_root],
         ),
+        Extension(
+            'stardist.lib.stardist3d_lib',
+            sources=['stardist/lib/stardist3d_lib.c', 'stardist/lib/stardist3d_impl.cpp'] + common_src + qhull_src,
+            extra_compile_args = ['-std=c++11'],
+            include_dirs=[qhull_root],
+        ),
     ],
 
     package_data={'stardist': ['kernels/*.cl']},

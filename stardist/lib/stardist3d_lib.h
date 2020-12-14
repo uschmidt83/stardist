@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #ifndef STARDIST3D_LIB_H
 #define STARDIST3D_LIB_H
 
