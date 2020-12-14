@@ -39,15 +39,16 @@ jobs:
           brew install gcc@9
           python -m cibuildwheel --output-dir dist
         env:
-          CIBW_BUILD: "cp3?-*"
+          CIBW_BUILD: "cp37-*" # tmp
+          # CIBW_BUILD: "cp3?-*"
           CIBW_SKIP: "cp35-* cp39-*"
           # install fork of 'delocate' to work around bug
           CIBW_BEFORE_BUILD: python -m pip install git+https://github.com/uschmidt83/delocate.git@patch-1
            # TODO: make it work for 10.9 (required libstdc++.dylib and libgomp.dylib from gcc compiled for 10.15)
           MACOSX_DEPLOYMENT_TARGET: 10.15
-          # CIBW_BUILD_VERBOSITY: 1
-          CIBW_TEST_REQUIRES: pytest tensorflow
-          CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
+          CIBW_BUILD_VERBOSITY: 1
+          # CIBW_TEST_REQUIRES: pytest tensorflow
+          # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
           # use gcc instead of clang
           CC: /usr/local/bin/gcc-9
           CXX: /usr/local/bin/g++-9
@@ -58,12 +59,14 @@ jobs:
           python -m cibuildwheel --output-dir dist
         env:
           # only build for platforms where tensorflow is available
-          CIBW_BUILD: "cp3?-*x86_64 cp3?-*win_amd64"
+          CIBW_BUILD: "cp37-*x86_64 cp37-*win_amd64" # tmp
+          # CIBW_BUILD: "cp3?-*x86_64 cp3?-*win_amd64"
           CIBW_SKIP: "cp35-* cp39-*"
           # numba is a requirement and only has wheels for manylinux2014
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_TEST_REQUIRES: pytest tensorflow
-          CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
+          CIBW_BUILD_VERBOSITY: 1
+          # CIBW_TEST_REQUIRES: pytest tensorflow
+          # CIBW_TEST_COMMAND: pytest -v -m "not gpu" {project}
 
       - uses: actions/upload-artifact@v2
         name: Upload wheels
