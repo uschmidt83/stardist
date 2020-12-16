@@ -5,6 +5,14 @@ from numpy.distutils.misc_util import get_numpy_include_dirs
 from os import path
 from glob import glob
 
+# https://stackoverflow.com/a/32765319
+import sys
+if sys.platform == 'darwin':
+    from distutils import sysconfig
+    vars = sysconfig.get_config_vars()
+    vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-dynamiclib')
+    # vars['LDSHARED'] = 'gcc -dynamiclib'
+
 class build_ext_openmp(build_ext):
     # https://www.openmp.org/resources/openmp-compilers-tools/
     # python setup.py build_ext --help-compiler
@@ -67,23 +75,25 @@ setup(
     cmdclass={'build_ext': build_ext_openmp},
 
     ext_modules=[
-        Extension(
-            'stardist.lib.stardist2d',
-            sources=['stardist/lib/stardist2d.cpp','stardist/lib/clipper.cpp'] + common_src,
-            extra_compile_args = ['-std=c++11'],
-            include_dirs=get_numpy_include_dirs(),
-        ),
-        Extension(
-            'stardist.lib.stardist3d',
-            sources=['stardist/lib/stardist3d.cpp', 'stardist/lib/stardist3d_impl.cpp'] + common_src + qhull_src,
-            extra_compile_args = ['-std=c++11'],
-            include_dirs=get_numpy_include_dirs() + [qhull_root],
-        ),
+        # Extension(
+        #     'stardist.lib.stardist2d',
+        #     sources=['stardist/lib/stardist2d.cpp','stardist/lib/clipper.cpp'] + common_src,
+        #     extra_compile_args = ['-std=c++11'],
+        #     include_dirs=get_numpy_include_dirs(),
+        # ),
+        # Extension(
+        #     'stardist.lib.stardist3d',
+        #     sources=['stardist/lib/stardist3d.cpp', 'stardist/lib/stardist3d_impl.cpp'] + common_src + qhull_src,
+        #     extra_compile_args = ['-std=c++11'],
+        #     include_dirs=get_numpy_include_dirs() + [qhull_root],
+        # ),
         Extension(
             'stardist.lib.stardist3d_lib',
-            sources=['stardist/lib/stardist3d_lib.c', 'stardist/lib/stardist3d_impl.cpp'] + common_src + qhull_src,
+            sources            = qhull_src,
+            extra_objects      = ['stardist/lib/stardist3d_lib.c', 'stardist/lib/stardist3d_impl.cpp'] + common_src,
             extra_compile_args = ['-std=c++11'],
-            include_dirs=[qhull_root],
+            extra_link_args    = ['-I' + qhull_root],
+            include_dirs       = [qhull_root],
         ),
     ],
 
