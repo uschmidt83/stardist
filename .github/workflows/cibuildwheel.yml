@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - master
+      - shared_lib_hack-mac_linux
 
 jobs:
   build_wheels:
