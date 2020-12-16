@@ -16,6 +16,8 @@ elif sys.platform == 'linux':
     from distutils import sysconfig
     vars = sysconfig.get_config_vars()
     vars['LDSHARED'] = vars['LDSHARED'].replace('-shared', '-shared -fPIC')
+elif sys.platform.startswith('win'):
+    pass
 
 
 class build_ext_openmp(build_ext):
@@ -98,7 +100,7 @@ setup(
             sources            = qhull_src,
             extra_objects      = ['stardist/lib/stardist3d_lib.c', 'stardist/lib/stardist3d_impl.cpp'] + common_src,
             extra_compile_args = ['-std=c++11'],
-            extra_link_args    = ['-I' + qhull_root],
+            extra_link_args    = ['-I./' + qhull_root],
             include_dirs       = [qhull_root],
         ),
     ],
