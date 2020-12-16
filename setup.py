@@ -12,6 +12,11 @@ if sys.platform == 'darwin':
     vars = sysconfig.get_config_vars()
     vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-dynamiclib')
     # vars['LDSHARED'] = 'gcc -dynamiclib'
+elif sys.platform == 'linux':
+    from distutils import sysconfig
+    vars = sysconfig.get_config_vars()
+    vars['LDSHARED'] = vars['LDSHARED'].replace('-shared', '-shared -fPIC')
+
 
 class build_ext_openmp(build_ext):
     # https://www.openmp.org/resources/openmp-compilers-tools/
@@ -89,6 +94,7 @@ setup(
         # ),
         Extension(
             'stardist.lib.stardist3d_lib',
+            language           = 'c++',
             sources            = qhull_src,
             extra_objects      = ['stardist/lib/stardist3d_lib.c', 'stardist/lib/stardist3d_impl.cpp'] + common_src,
             extra_compile_args = ['-std=c++11'],
