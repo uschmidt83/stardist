@@ -15,7 +15,7 @@ from scipy.ndimage import zoom
 from packaging.version import Version
 
 keras = keras_import()
-Input, Conv2D, MaxPooling2D = keras_import('layers', 'Input', 'Conv2D', 'MaxPooling2D')
+Input, Conv2D, MaxPooling2D, concatenate = keras_import('layers', 'Input', 'Conv2D', 'MaxPooling2D', 'concatenate')
 Model = keras_import('models', 'Model')
 
 from .base import StarDistBase, StarDistDataBase, _tf_version_at_least
@@ -335,6 +335,9 @@ class StarDist2D(StarDistBase):
 
         output_prob = Conv2D(                 1, (1,1), name='prob', padding='same', activation='sigmoid')(unet)
         output_dist = Conv2D(self.config.n_rays, (1,1), name='dist', padding='same', activation='linear')(unet)
+
+        output_sigma = Conv2D(self.config.n_rays, (1,1), name='sigma', padding='same', activation='softplus')(unet)
+        output_dist = concatenate([output_dist,output_sigma], name='laplace')
 
         # attach extra classification head when self.n_classes is given
         if self._is_multiclass():

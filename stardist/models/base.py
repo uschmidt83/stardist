@@ -31,6 +31,19 @@ from ..utils import _is_power_of_2,  _is_floatarray, optimize_threshold, grid_di
 
 # TODO: helper function to check if receptive field of cnn is sufficient for object sizes in GT
 
+def _mean_or_not(mean):
+    return (lambda x: K.mean(x,axis=-1)) if mean else (lambda x: x)
+
+def loss_laplace(eps=1e-3, mean=True):
+    R = _mean_or_not(mean)
+    C = np.log(2.0)
+    def nll_laplace(y_true, y_pred):
+        n     = K.shape(y_true)[-1]
+        mu    = y_pred[...,:n]
+        sigma = y_pred[...,n:] + eps
+        return R(K.abs((mu-y_true)/sigma) + K.log(sigma) + C)
+    return nll_laplace
+
 def generic_masked_loss(mask, loss, weights=1, norm_by_mask=True, reg_weight=0, reg_penalty=K.abs):
     mask = K.cast(mask, K.floatx())
     weights = K.cast(weights, K.floatx())
@@ -45,29 +58,30 @@ def generic_masked_loss(mask, loss, weights=1, norm_by_mask=True, reg_weight=0, 
             return actual_loss / norm_mask
     return _loss
 
-def masked_loss(mask, penalty, reg_weight, norm_by_mask):
-    loss = lambda y_true, y_pred: penalty(K.cast(y_true, K.floatx()) - y_pred)
-    return generic_masked_loss(mask, loss, reg_weight=reg_weight, norm_by_mask=norm_by_mask)
+# def masked_loss(mask, penalty, reg_weight, norm_by_mask):
+#     loss = lambda y_true, y_pred: penalty(K.cast(y_true, K.floatx()) - y_pred)
+#     return generic_masked_loss(mask, loss, reg_weight=reg_weight, norm_by_mask=norm_by_mask)
 
 # TODO: should we use norm_by_mask=True in the loss or only in a metric?
 #       previous 2D behavior was norm_by_mask=False
 #       same question for reg_weight? use 1e-4 (as in 3D) or 0 (as in 2D)?
 
 def masked_loss_mae(mask, reg_weight=0, norm_by_mask=True):
-    return masked_loss(mask, K.abs, reg_weight=reg_weight, norm_by_mask=norm_by_mask)
+    return generic_masked_loss(mask, loss_laplace(eps=1e-3, mean=False), reg_weight=reg_weight, norm_by_mask=norm_by_mask)
+    # return masked_loss(mask, K.abs, reg_weight=reg_weight, norm_by_mask=norm_by_mask)
 
-def masked_loss_mse(mask, reg_weight=0, norm_by_mask=True):
-    return masked_loss(mask, K.square, reg_weight=reg_weight, norm_by_mask=norm_by_mask)
+# def masked_loss_mse(mask, reg_weight=0, norm_by_mask=True):
+#     return masked_loss(mask, K.square, reg_weight=reg_weight, norm_by_mask=norm_by_mask)
 
-def masked_metric_mae(mask):
-    def relevant_mae(y_true, y_pred):
-        return masked_loss(mask, K.abs, reg_weight=0, norm_by_mask=True)(y_true, y_pred)
-    return relevant_mae
+# def masked_metric_mae(mask):
+#     def relevant_mae(y_true, y_pred):
+#         return masked_loss(mask, K.abs, reg_weight=0, norm_by_mask=True)(y_true, y_pred)
+#     return relevant_mae
 
-def masked_metric_mse(mask):
-    def relevant_mse(y_true, y_pred):
-        return masked_loss(mask, K.square, reg_weight=0, norm_by_mask=True)(y_true, y_pred)
-    return relevant_mse
+# def masked_metric_mse(mask):
+#     def relevant_mse(y_true, y_pred):
+#         return masked_loss(mask, K.square, reg_weight=0, norm_by_mask=True)(y_true, y_pred)
+#     return relevant_mse
 
 def kld(y_true, y_pred):
     y_true = K.cast(y_true, K.floatx())
@@ -307,6 +321,8 @@ class StarDistBase(BaseModel):
         if optimizer is None:
             optimizer = Adam(self.config.train_learning_rate)
 
+        assert self.config.train_dist_loss == 'mae'
+
         masked_dist_loss = {'mse': masked_loss_mse,
                             'mae': masked_loss_mae,
                             'iou': masked_loss_iou,
@@ -345,8 +361,8 @@ class StarDistBase(BaseModel):
 
         self.keras_model.compile(optimizer, loss         = loss,
                                             loss_weights = list(self.config.train_loss_weights),
-                                            metrics      = {'prob': kld,
-                                                            'dist': [relevant_mae, relevant_mse, dist_iou_metric]})
+                                            metrics      = {'prob': kld})
+                                                            # 'dist': [relevant_mae, relevant_mse, dist_iou_metric]})
 
         self.callbacks = []
         if self.basedir is not None:
@@ -486,7 +502,7 @@ class StarDistBase(BaseModel):
             tile_generator, output_shape, create_empty_output = tiling_setup()
 
             prob = create_empty_output(1)
-            dist = create_empty_output(self.config.n_rays)
+            dist = create_empty_output(2 * self.config.n_rays)
             if self._is_multiclass():
                 prob_class = create_empty_output(self.config.n_classes+1)
                 result = (prob, dist, prob_class)
@@ -518,8 +534,11 @@ class StarDistBase(BaseModel):
         # prob
         result[0] = np.take(result[0],0,axis=channel)
         # dist
-        result[1] = np.maximum(1e-3, result[1]) # avoid small dist values to prevent problems with Qhull
+        # result[1] = np.maximum(1e-3, result[1]) # avoid small dist values to prevent problems with Qhull
         result[1] = np.moveaxis(result[1],channel,-1)
+
+        result[1][..., :self.config.n_rays] = np.maximum(1e-3, result[1][..., :self.config.n_rays])  # avoid small dist values to prevent problems with Qhull
+        result[1][..., self.config.n_rays:] = result[1][..., self.config.n_rays:] + 1e-3  # sigma
 
         if self._is_multiclass():
             # prob_class
@@ -544,6 +563,7 @@ class StarDistBase(BaseModel):
         -------
         (prob, dist, [prob_class], points)   flat list of probs, dists, (optional prob_class) and points
         """
+        raise NotImplementedError()
         if prob_thresh is None: prob_thresh = self.thresholds.prob
 
         predict_kwargs.setdefault('verbose', 0)
@@ -643,7 +663,7 @@ class StarDistBase(BaseModel):
 
 
     def _predict_instances_generator(self, img, axes=None, normalizer=None,
-                                     sparse=True,
+                                     sparse=False,
                                      prob_thresh=None, nms_thresh=None,
                                      scale=None,
                                      n_tiles=None, show_tile_progress=True,
@@ -753,6 +773,8 @@ class StarDistBase(BaseModel):
         else:
             prob, dist, points = res
             prob_class = None
+
+        dist = dist[..., :self.config.n_rays]  # ignore sigma for instance segmentation
 
         yield 'nms'  # indicate that non-maximum suppression is starting
         res_instances = self._instances_from_prediction(_shape_inst, prob, dist,
@@ -1013,6 +1035,7 @@ class StarDistBase(BaseModel):
             Keyword arguments for ``utils.optimize_threshold`` function.
 
         """
+        raise NotImplementedError()
         if predict_kwargs is None:
             predict_kwargs = {}
         if optimize_kwargs is None:
